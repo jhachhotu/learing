@@ -3,59 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to Our App</title>
+    <title>E-Waste Management System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         .hero-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+                        url('https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
+            background-size: cover;
+            background-position: center;
             color: white;
-            padding: 100px 0;
+            padding: 150px 0;
         }
-        
+
         .feature-card {
             border: none;
             transition: transform 0.3s ease;
+            padding: 2rem;
+            text-align: center;
+            height: 100%;
         }
-        
+
         .feature-card:hover {
             transform: translateY(-10px);
         }
-        
+
         .feature-icon {
+            font-size: 3rem;
+            color: #28a745;
+            margin-bottom: 1.5rem;
+        }
+
+        .stats-section {
+            background: #f8f9fa;
+            padding: 4rem 0;
+        }
+
+        .stat-number {
             font-size: 2.5rem;
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .how-it-works {
+            padding: 4rem 0;
+        }
+
+        .step-icon {
+            font-size: 2.5rem;
+            color: #28a745;
             margin-bottom: 1rem;
-            color: #667eea;
         }
-        
-        .nav-link {
-            color: white !important;
-            margin: 0 15px;
-            transition: opacity 0.3s ease;
-        }
-        
-        .nav-link:hover {
-            opacity: 0.8;
-        }
-        
+
         .btn-custom {
-            background: white;
-            color: #667eea;
-            padding: 10px 30px;
-            border-radius: 25px;
+            background: #28a745;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 30px;
+            border: none;
             transition: all 0.3s ease;
         }
-        
+
         .btn-custom:hover {
-            background: #f8f9fa;
+            background: #218838;
             transform: scale(1.05);
+            color: white;
+        }
+
+        .navbar {
+            background: rgba(0, 0, 0, 0.8) !important;
         }
     </style>
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark" style="background: #667eea;">
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container">
-            <a class="navbar-brand" href="/">YourApp</a>
+            <a class="navbar-brand" href="/">E-Waste Management</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -65,13 +89,16 @@
                         <a class="nav-link" href="#features">Features</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="#how-it-works">How It Works</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="#about">About</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/login">Login</a>
                     </li>
                     <li class="nav-item">
-                        <a class="btn btn-custom" href="/signup">Sign Up</a>
+                        <a class="btn btn-custom" href="/signup">Get Started</a>
                     </li>
                 </ul>
             </div>
@@ -81,9 +108,32 @@
     <!-- Hero Section -->
     <section class="hero-section">
         <div class="container text-center">
-            <h1 class="display-4 mb-4">Welcome to YourApp</h1>
-            <p class="lead mb-5">The perfect solution for your needs. Simple, powerful, and secure.</p>
-            <a href="/signup" class="btn btn-custom btn-lg">Get Started</a>
+            <h1 class="display-4 mb-4">Recycle Smart, Save the Planet!</h1>
+            <p class="lead mb-5">Join our mission to responsibly manage electronic waste and create a sustainable future.</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="/signup" class="btn btn-custom btn-lg">Get Started</a>
+                <a href="#collection-centers" class="btn btn-outline-light btn-lg">Find Collection Center</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-md-4 mb-4">
+                    <div class="stat-number">80%</div>
+                    <p>E-Waste Not Recycled Properly</p>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="stat-number">50M</div>
+                    <p>Tons of E-Waste Generated Yearly</p>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="stat-number">95%</div>
+                    <p>Can Be Recycled</p>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -93,42 +143,74 @@
             <h2 class="text-center mb-5">Our Features</h2>
             <div class="row g-4">
                 <div class="col-md-4">
-                    <div class="card feature-card text-center p-4">
-                        <div class="feature-icon">🔒</div>
-                        <h3>Secure</h3>
-                        <p>Your data is protected with the latest security measures.</p>
+                    <div class="feature-card" onclick="handleFeatureClick('pickup')" style="cursor: pointer;">
+                        <i class="fas fa-truck feature-icon"></i>
+                        <h3>E-Waste Pickup Service</h3>
+                        <p>Schedule convenient pickup times for your electronic waste right from your doorstep.</p>
+                        <a href="/dashboard?feature=pickup" class="btn btn-custom mt-3">Schedule Pickup</a>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="card feature-card text-center p-4">
-                        <div class="feature-icon">⚡</div>
-                        <h3>Fast</h3>
-                        <p>Lightning-fast performance and real-time updates.</p>
+                    <div class="feature-card" onclick="handleFeatureClick('centers')" style="cursor: pointer;">
+                        <i class="fas fa-map-marker-alt feature-icon"></i>
+                        <h3>Collection Centers</h3>
+                        <p>Find the nearest e-waste collection centers with our interactive map.</p>
+                        <a href="/dashboard?feature=centers" class="btn btn-custom mt-3">Find Centers</a>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="card feature-card text-center p-4">
-                        <div class="feature-icon">🎯</div>
-                        <h3>Simple</h3>
-                        <p>Easy to use interface with powerful features.</p>
+                    <div class="feature-card" onclick="handleFeatureClick('tracking')" style="cursor: pointer;">
+                        <i class="fas fa-sync feature-icon"></i>
+                        <h3>Process Tracking</h3>
+                        <p>Track your e-waste recycling progress in real-time through our platform.</p>
+                        <a href="/dashboard?feature=tracking" class="btn btn-custom mt-3">Track Now</a>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="how-it-works bg-light">
+        <div class="container">
+            <h2 class="text-center mb-5">How It Works</h2>
+            <div class="row">
+                <div class="col-md-3 text-center mb-4">
+                    <i class="fas fa-user-plus step-icon"></i>
+                    <h4>Sign Up</h4>
+                    <p>Create your account in minutes</p>
+                </div>
+                <div class="col-md-3 text-center mb-4">
+                    <i class="fas fa-clipboard-list step-icon"></i>
+                    <h4>Submit Details</h4>
+                    <p>Tell us about your e-waste</p>
+                </div>
+                <div class="col-md-3 text-center mb-4">
+                    <i class="fas fa-calendar-alt step-icon"></i>
+                    <h4>Schedule Pickup</h4>
+                    <p>Choose a convenient time</p>
+                </div>
+                <div class="col-md-3 text-center mb-4">
+                    <i class="fas fa-award step-icon"></i>
+                    <h4>Earn Rewards</h4>
+                    <p>Get rewarded for recycling</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- About Section -->
-    <section id="about" class="py-5 bg-light">
+    <section id="about" class="py-5">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-md-6">
-                    <h2 class="mb-4">About Us</h2>
-                    <p class="lead">We're dedicated to providing the best service for our users.</p>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-                    <a href="/signup" class="btn btn-primary">Join Now</a>
+                    <h2 class="mb-4">About Our Platform</h2>
+                    <p class="lead">We're dedicated to making e-waste recycling accessible and rewarding.</p>
+                    <p>Our platform connects users with certified recycling centers, ensuring proper disposal of electronic waste while protecting the environment. Through our innovative tracking system, users can monitor their environmental impact and earn rewards for responsible recycling.</p>
+                    <a href="/signup" class="btn btn-custom">Join Our Mission</a>
                 </div>
                 <div class="col-md-6">
-                    <img src="https://via.placeholder.com/500x300" alt="About Us" class="img-fluid rounded shadow">
+                    <img src="https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80" alt="About Us" class="img-fluid rounded shadow">
                 </div>
             </div>
         </div>
@@ -139,8 +221,8 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-6">
-                    <h5>YourApp</h5>
-                    <p>Making your life easier.</p>
+                    <h5>E-Waste Management System</h5>
+                    <p>Making electronic waste recycling easier and more accessible.</p>
                 </div>
                 <div class="col-md-6 text-md-end">
                     <a href="#" class="text-white me-3">Privacy Policy</a>
@@ -152,5 +234,17 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    function handleFeatureClick(feature) {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            // If user is not logged in, redirect to login with return URL
+            window.location.href = `/login?redirect=dashboard&feature=${feature}`;
+        } else {
+            // If user is logged in, go directly to the dashboard feature
+            window.location.href = `/dashboard?feature=${feature}`;
+        }
+    }
+    </script>
 </body>
-</html> 
+</html>
