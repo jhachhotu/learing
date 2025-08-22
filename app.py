@@ -17,16 +17,30 @@ import ssl
 from flask_mail import Mail, Message
 from datetime import timedelta
 
+
 app = Flask(__name__)
 
 # Configurations
-app.config['SECRET_KEY'] = 'your-secret-key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key')
+
+# Database configuration
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL and DATABASE_URL.startswith('postgres://'):
+    DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL or 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JWT_SECRET_KEY'] = 'your-secret-key'
+app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'your-secret-key')
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=1)
 app.config['JWT_REFRESH_TOKEN_EXPIRES'] = datetime.timedelta(days=30)
+
+# Email configuration
 app.config.update(MAIL_SETTINGS)
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', app.config['MAIL_SERVER'])
+app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', app.config['MAIL_PORT']))
+app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', str(app.config['MAIL_USE_TLS'])).lower() == 'true'
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', app.config['MAIL_USERNAME'])
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', app.config['MAIL_PASSWORD'])
 
 # Initialize extensions
 db = SQLAlchemy(app)
@@ -123,9 +137,9 @@ def send_otp_email(to_email, otp):
 
         # Try to log in to server and send email
         with smtplib.SMTP("smtp.gmail.com", 587) as server:
-            server.ehlo()  # Can be omitted
-            server.starttls(context=context)
-            server.ehlo()  # Can be omitted
+            # server.ehlo()  # Can be omitted
+            # server.starttls(context=context)
+            # server.ehlo()  # Can be omitted
             
             # Print debug info
             print(f"Attempting to login with email: {EMAIL_ADDRESS}")
