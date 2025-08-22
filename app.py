@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, jwt_required, get_jwt_identity
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -179,6 +179,29 @@ def send_otp_email(to_email, otp):
         print(f"Failed to send email. Error: {str(e)}")
         return False
 
+def send_login_notification(email, name):
+    try:
+        msg = Message(
+            'Login Successful',
+            sender=app.config['MAIL_USERNAME'],
+            recipients=[email]
+        )
+        msg.body = f"""
+        Hello {name},
+        
+        You have successfully logged in to your E-Waste Management account.
+        
+        If this wasn't you, please contact support immediately.
+        
+        Best regards,
+        E-Waste Management Team
+        """
+        mail.send(msg)
+        return True
+    except Exception as e:
+        print(f"Error sending login email: {str(e)}")
+        return False
+
 @app.route('/api/signup', methods=['POST'])
 def signup():
     try:
@@ -188,29 +211,32 @@ def signup():
         if User.query.filter_by(email=data['email']).first():
             return jsonify({'error': 'Email already registered'}), 409
         
-        # Generate OTP
-        otp = ''.join(random.choices('0123456789', k=6))
+        # Hash the password
+        hashed_password = generate_password_hash(data['password'], method='pbkdf2:sha256')
         
-        # Try to send email first
-        if not send_otp_email(data['email'], otp):
-            return jsonify({'error': 'Failed to send verification email. Please try again.'}), 500
-        
-        # Create new user only if email was sent successfully
-        hashed_password = generate_password_hash(data['password'])
+        # Create user
         new_user = User(
             full_name=data['full_name'],
             email=data['email'],
             password=hashed_password,
-            otp=otp
+            is_verified=True,
+            otp=None
         )
         
         db.session.add(new_user)
         db.session.commit()
         
+        # Send welcome email
+        try:
+            send_login_notification(new_user.email, new_user.full_name)
+        except Exception as e:
+            print(f"Warning: Could not send welcome email: {str(e)}")
+        
+        # Return success response with redirect to login page
         return jsonify({
-            'message': 'Registration successful! Please check your email for verification code.',
-            'email': data['email']
-        }), 201
+            'message': 'Registration successful! Redirecting to login...',
+            'redirect': f'/login?email={data["email"]}'
+        }), 200
         
     except Exception as e:
         db.session.rollback()
@@ -224,17 +250,18 @@ def login():
         user = User.query.filter_by(email=data['email']).first()
         
         if user and check_password_hash(user.password, data['password']):
-            if not user.is_verified:
-                return jsonify({'error': 'Please verify your email first'}), 401
-                
             # Create access token with user ID
             access_token = create_access_token(
                 identity=user.id,
                 expires_delta=timedelta(days=1)
             )
             
+            # Send login notification email
+            send_login_notification(user.email, user.full_name)
+            
             return jsonify({
                 'message': 'Login successful',
+                'redirect': '/dashboard',
                 'access_token': access_token,
                 'user': {
                     'id': user.id,
@@ -247,7 +274,7 @@ def login():
             
     except Exception as e:
         print(f"Login error: {str(e)}")
-        return jsonify({'error': 'Login failed'}), 500
+        return jsonify({'error': 'Login failed. Please try again.'}), 500
 
 # Routes
 @app.route('/')

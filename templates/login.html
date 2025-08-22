@@ -67,6 +67,23 @@
     </div>
 
     <script>
+        // Check for registered email in URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const registeredEmail = urlParams.get('email');
+        
+        // Auto-fill email if coming from registration
+        if (registeredEmail) {
+            document.getElementById('email').value = decodeURIComponent(registeredEmail);
+            // Show success message
+            const alert = document.getElementById('alert');
+            alert.className = 'alert alert-success';
+            alert.textContent = 'Registration successful! Please log in.';
+            alert.classList.remove('d-none');
+            
+            // Clear the URL parameter
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
         // Add system status check
         async function checkSystemStatus() {
             try {

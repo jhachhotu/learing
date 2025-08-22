@@ -90,11 +90,13 @@
                 
                 if (response.ok) {
                     alert.className = 'alert alert-success';
-                    alert.textContent = 'Please check your email for OTP verification';
-                    localStorage.setItem('temp_email', document.getElementById('email').value);
+                    alert.textContent = 'Registration successful! Redirecting to login...';
+                    
+                    // Redirect to login page with email prefilled
+                    const email = document.getElementById('email').value;
                     setTimeout(() => {
-                        window.location.href = '/verify-otp';
-                    }, 2000);
+                        window.location.href = `/login?email=${encodeURIComponent(email)}`;
+                    }, 1500);
                 } else {
                     alert.className = 'alert alert-danger';
                     alert.textContent = data.error;
