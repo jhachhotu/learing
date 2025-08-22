@@ -12,11 +12,13 @@ import traceback
 from sqlalchemy import text
 import os
 from dotenv import load_dotenv
-from config import MAIL_SETTINGS
 import ssl
 from flask_mail import Mail, Message
 from datetime import timedelta
+import os
 
+# Load environment variables from .env file if it exists
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -24,32 +26,42 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key')
 
 # Database configuration
-DATABASE_URL = os.environ.get('DATABASE_URL')
-if DATABASE_URL and DATABASE_URL.startswith('postgres://'):
-    DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+basedir = os.path.abspath(os.path.dirname(__file__))
+db_path = os.path.join(basedir, 'e-waste.db')
 
-app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL or 'sqlite:///users.db'
+# Use SQLite with the new database file
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Create the database file if it doesn't exist
+try:
+    if not os.path.exists(db_path):
+        with open(db_path, 'w') as f:
+            f.write('')
+        print(f"Created database file at: {db_path}")
+    # Ensure the file is writable
+    os.chmod(db_path, 0o666)
+except Exception as e:
+    print(f"Error setting up database file: {e}")
+    raise
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'your-secret-key')
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=1)
 app.config['JWT_REFRESH_TOKEN_EXPIRES'] = datetime.timedelta(days=30)
 
 # Email configuration
-app.config.update(MAIL_SETTINGS)
-app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', app.config['MAIL_SERVER'])
-app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', app.config['MAIL_PORT']))
-app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', str(app.config['MAIL_USE_TLS'])).lower() == 'true'
-app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', app.config['MAIL_USERNAME'])
-app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', app.config['MAIL_PASSWORD'])
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'true').lower() == 'true'
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', '')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME', '')
 
 # Initialize extensions
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
 mail = Mail(app)
 
-# Email Configuration - use only these settings
-EMAIL_ADDRESS = "chhotusimaria@gmail.com"
-EMAIL_PASSWORD = "loaa qasj bpdk gjwd"
+# Email Configuration - using app config
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -111,7 +123,7 @@ def send_otp_email(to_email, otp):
     try:
         # Setup the MIME
         message = MIMEMultipart()
-        message['From'] = EMAIL_ADDRESS
+        message['From'] = app.config['MAIL_DEFAULT_SENDER']
         message['To'] = to_email
         message['Subject'] = "Your E-Waste Management Verification Code"
 
@@ -132,24 +144,33 @@ def send_otp_email(to_email, otp):
         # Add body to email
         message.attach(MIMEText(body, 'plain'))
 
-        # Create secure SSL context
-        context = ssl.create_default_context()
-
-        # Try to log in to server and send email
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
-            # server.ehlo()  # Can be omitted
-            # server.starttls(context=context)
-            # server.ehlo()  # Can be omitted
-            
-            # Print debug info
-            print(f"Attempting to login with email: {EMAIL_ADDRESS}")
-            
-            # Login to the server
-            server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
-            
-            # Convert the message to string and send
-            text = message.as_string()
-            server.sendmail(EMAIL_ADDRESS, to_email, text)
+        try:
+            # Try to send using Flask-Mail
+            msg = Message(
+                subject="Your E-Waste Management Verification Code",
+                sender=app.config['MAIL_DEFAULT_SENDER'],
+                recipients=[to_email],
+                body=body
+            )
+            mail.send(msg)
+            print(f"Email sent to {to_email} using Flask-Mail")
+            return True
+        except Exception as e:
+            print(f"Flask-Mail failed, falling back to SMTP: {str(e)}")
+            # Fallback to SMTP
+            try:
+                with smtplib.SMTP(app.config['MAIL_SERVER'], app.config['MAIL_PORT']) as server:
+                    if app.config['MAIL_USE_TLS']:
+                        server.starttls()
+                    if app.config['MAIL_USERNAME'] and app.config['MAIL_PASSWORD']:
+                        server.login(app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
+                    text = message.as_string()
+                    server.sendmail(app.config['MAIL_DEFAULT_SENDER'], to_email, text)
+                    print(f"Email sent to {to_email} using SMTP")
+                    return True
+            except Exception as smtp_error:
+                print(f"SMTP fallback failed: {str(smtp_error)}")
+                return False
             
             print(f"Successfully sent email to {to_email}")
             return True
@@ -550,11 +571,17 @@ def debug_db_schema():
 # Add this route temporarily for testing
 @app.route('/test-email')
 def test_email():
-    result = send_otp_email("rahul21993@gmail.com", "123456")
-    return jsonify({
-        'success': result,
-        'message': 'Email test completed'
-    })
+    try:
+        msg = Message(
+            'Test Email from E-Waste Management',
+            sender=app.config['MAIL_DEFAULT_SENDER'],
+            recipients=['test@example.com']
+        )
+        msg.body = 'This is a test email from the e-waste management system.'
+        mail.send(msg)
+        return 'Email sent successfully!'
+    except Exception as e:
+        return f'Error: {str(e)}'
 
 # Add route to manage collection centers
 @app.route('/api/collection-centers', methods=['GET', 'POST'])
